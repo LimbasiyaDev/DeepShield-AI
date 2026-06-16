@@ -1,0 +1,78 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = "file:./dev.db"
+}
+
+model User {
+  id                   String   @id @default(uuid())
+  walletAddress        String   @unique
+  protectionScore      Float    @default(0)
+  totalProtectedTrades Int      @default(0)
+  totalSavings         Float    @default(0)
+  createdAt            DateTime @default(now())
+  updatedAt            DateTime @updatedAt
+}
+
+model ProtectedTrade {
+  id                 String   @id @default(uuid())
+  walletAddress      String
+  tokenPair          String
+  tradeAmount        Float
+  riskScore          Float
+  protectionStrategy String
+  estimatedSavings   Float
+  actualSavings      Float?
+  txHash             String?
+  status             String
+  createdAt          DateTime @default(now())
+
+  replayEvents       ReplayEvent[]
+}
+
+model RiskReport {
+  id               String   @id @default(uuid())
+  walletAddress    String
+  tokenPair        String
+  riskScore        Float
+  mevProbability   Float
+  liquidityScore   Float
+  volatilityScore  Float
+  whaleScore       Float
+  recommendation   String
+  createdAt        DateTime @default(now())
+}
+
+model WhaleEvent {
+  id         String   @id @default(uuid())
+  token      String
+  eventType  String
+  volume     Float
+  impact     String
+  confidence Float
+  createdAt  DateTime @default(now())
+}
+
+model PortfolioAnalysis {
+  id             String   @id @default(uuid())
+  walletAddress  String
+  portfolioScore Float
+  riskLevel      String
+  recommendation String
+  createdAt      DateTime @default(now())
+}
+
+model ReplayEvent {
+  id               String         @id @default(uuid())
+  tradeId          String
+  trade            ProtectedTrade @relation(fields: [tradeId], references: [id])
+  attackType       String
+  protectionMethod String
+  estimatedLoss    Float
+  actualLoss       Float
+  savedAmount      Float
+  createdAt        DateTime       @default(now())
+}

@@ -1,0 +1,14 @@
+{
+  "network": "testnet",
+  "packageId": "",
+  "objects": {
+    "RiskRegistry": "",
+    "ProtectionRegistry": "",
+    "MarketIntelligenceRegistry": "",
+    "PortfolioRegistry": ""
+  },
+  "walrus": {
+    "publisher": "https://publisher.walrus-testnet.walrus.space",
+    "aggregator": "https://aggregator.walrus-testnet.walrus.space"
+  }
+}
