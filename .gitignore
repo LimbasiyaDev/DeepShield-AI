@@ -1,0 +1,6 @@
+Deepshield-AI/
+deepshield-contracts/build/
+deepshield-contracts/Move.lock
+deepshield-contracts/Published.toml
+*.db
+*.db-journal

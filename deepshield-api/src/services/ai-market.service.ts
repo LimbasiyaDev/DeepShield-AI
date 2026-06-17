@@ -10,12 +10,6 @@ export class AIMarketService {
     const cached = GeminiCache.get(cacheKey);
     if (cached) return cached;
 
-    if (process.env.GROQ_API_KEY === 'dummy_key' || !process.env.GROQ_API_KEY) {
-      const mock = this.mockAnalysis(tokenData);
-      GeminiCache.set(cacheKey, mock);
-      return mock;
-    }
-
     try {
       const prompt = `Analyze the following DeepBook market data for ${tokenData.token}:\n${JSON.stringify(tokenData)}\n\nProvide output in JSON format with fields: sentiment (Bullish, Bearish, Neutral), confidence (0-100), expectedMove, recommendation.`;
       
@@ -32,7 +26,17 @@ export class AIMarketService {
       clearTimeout(timeoutId);
 
       const text = chatCompletion.choices[0]?.message?.content || "{}";
-      const result = JSON.parse(text);
+      console.log('--- GROQ AI RESPONSE ---', text);
+      const rawResult = JSON.parse(text);
+      
+      // Map keys case-insensitively just in case
+      const result = {
+        sentiment: rawResult.sentiment || rawResult.Sentiment || 'Neutral',
+        confidence: rawResult.confidence || rawResult.Confidence || 50,
+        expectedMove: rawResult.expectedMove || rawResult.ExpectedMove || '0%',
+        recommendation: rawResult.recommendation || rawResult.Recommendation || 'No clear recommendation'
+      };
+      
       GeminiCache.set(cacheKey, result);
       return result;
     } catch (error: any) {
@@ -47,14 +51,5 @@ export class AIMarketService {
       // Do not cache the hard failure so it can retry later, but we can return it.
       return fallback;
     }
-  }
-
-  private static mockAnalysis(tokenData: any) {
-    return {
-      sentiment: "Bullish",
-      confidence: 85,
-      expectedMove: "+5.2%",
-      recommendation: "Accumulate on dips. High probability of upward continuation."
-    };
   }
 }

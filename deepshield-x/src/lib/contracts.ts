@@ -1,7 +1,7 @@
 import { Transaction } from '@mysten/sui/transactions';
 
-// Mock package ID for hackathon demonstration
-const PACKAGE_ID = '0x1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef';
+// Real package ID deployed to testnet
+const PACKAGE_ID = '0x2d559ffc506914dafec587f40550d4427cecfa19aae572593e592ea1c7653988';
 
 export const buildCommitOrderTx = (poolId: string, amount: number, senderWallet: string) => {
   const tx = new Transaction();

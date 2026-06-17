@@ -19,7 +19,7 @@ export class MoveService {
     return Ed25519Keypair.fromSecretKey(process.env.SUI_PRIVATE_KEY);
   }
 
-  private static async executeRealTransaction(moduleName: string, functionName: string, args: any[]): Promise<SuiExecutionResult> {
+  private static async executeRealTransaction(moduleName: string, functionName: string, argsBuilder: (tx: Transaction) => any[]): Promise<SuiExecutionResult> {
     const keypair = this.getAdminKeypair();
     
     if (!keypair) {
@@ -35,14 +35,12 @@ export class MoveService {
       const tx = new Transaction();
       
       if (!this.packageId || this.packageId.startsWith('0x1234')) {
-        // Fallback: If no package ID, execute a dummy splitCoins to generate a real transaction on-chain
-        // This ensures the verification center always has a real txHash to link to the explorer.
         const [coin] = tx.splitCoins(tx.gas, [tx.pure.u64(1)]);
         tx.transferObjects([coin], tx.pure.address(keypair.toSuiAddress()));
       } else {
         tx.moveCall({
           target: `${this.packageId}::${moduleName}::${functionName}`,
-          arguments: args.map(arg => typeof arg === 'string' ? tx.pure.string(arg) : typeof arg === 'number' ? tx.pure.u64(arg) : tx.pure.address(arg))
+          arguments: argsBuilder(tx)
         });
       }
 
@@ -55,7 +53,6 @@ export class MoveService {
         }
       });
 
-      // Find the newly created object ID from the objectChanges
       let createdObjectId = 'unknown_object_id';
       if (result.objectChanges) {
         const createdObj = result.objectChanges.find(change => change.type === 'created');
@@ -86,8 +83,13 @@ export class MoveService {
     recommendation: string,
     walrusBlobId: string
   ): Promise<SuiExecutionResult> {
-    return this.executeRealTransaction('risk_registry', 'create_risk_report', [
-      recipient, tokenPair, riskScore, recommendation, walrusBlobId, Date.now()
+    return this.executeRealTransaction('risk_registry', 'create_risk_report', (tx) => [
+      tx.pure.address(recipient),
+      tx.pure.string(tokenPair),
+      tx.pure.u8(Math.floor(riskScore)),
+      tx.pure.string(recommendation),
+      tx.pure.string(walrusBlobId),
+      tx.pure.u64(Date.now())
     ]);
   }
 
@@ -99,8 +101,14 @@ export class MoveService {
     actualSavings: string,
     walrusBlobId: string
   ): Promise<SuiExecutionResult> {
-    return this.executeRealTransaction('protection_registry', 'record_protection', [
-      recipient, pair, strategy, estimatedSavings, actualSavings, walrusBlobId, Date.now()
+    return this.executeRealTransaction('protection_registry', 'record_protection', (tx) => [
+      tx.pure.address(recipient),
+      tx.pure.string(pair),
+      tx.pure.string(strategy),
+      tx.pure.u64(parseInt(estimatedSavings) || 0),
+      tx.pure.u64(parseInt(actualSavings) || 0),
+      tx.pure.string(walrusBlobId),
+      tx.pure.u64(Date.now())
     ]);
   }
 
@@ -111,8 +119,13 @@ export class MoveService {
     confidence: number,
     walrusBlobId: string
   ): Promise<SuiExecutionResult> {
-    return this.executeRealTransaction('market_intelligence', 'save_analysis', [
-      recipient, token, sentiment, confidence, walrusBlobId, Date.now()
+    return this.executeRealTransaction('market_intelligence', 'save_analysis', (tx) => [
+      tx.pure.address(recipient),
+      tx.pure.string(token),
+      tx.pure.string(sentiment),
+      tx.pure.u8(Math.floor(confidence)),
+      tx.pure.string(walrusBlobId),
+      tx.pure.u64(Date.now())
     ]);
   }
 
@@ -123,8 +136,13 @@ export class MoveService {
     riskLevel: string,
     walrusBlobId: string
   ): Promise<SuiExecutionResult> {
-    return this.executeRealTransaction('portfolio_registry', 'save_portfolio', [
-      recipient, wallet, score, riskLevel, walrusBlobId, Date.now()
+    return this.executeRealTransaction('portfolio_registry', 'save_portfolio', (tx) => [
+      tx.pure.address(recipient),
+      tx.pure.address(wallet),
+      tx.pure.u8(Math.floor(score)),
+      tx.pure.string(riskLevel),
+      tx.pure.string(walrusBlobId),
+      tx.pure.u64(Date.now())
     ]);
   }
 
@@ -136,8 +154,14 @@ export class MoveService {
     estimatedSavings: string,
     blobId: string
   ): Promise<SuiExecutionResult> {
-    return this.executeRealTransaction('protection_proof', 'create_proof', [
-      recipient, tradePair, riskScore, strategy, estimatedSavings, blobId, Date.now()
+    return this.executeRealTransaction('protection_proof', 'create_proof', (tx) => [
+      tx.pure.address(recipient),
+      tx.pure.string(tradePair),
+      tx.pure.u8(Math.floor(riskScore)),
+      tx.pure.string(strategy),
+      tx.pure.u64(parseInt(estimatedSavings) || 0),
+      tx.pure.string(blobId),
+      tx.pure.u64(Date.now())
     ]);
   }
 }

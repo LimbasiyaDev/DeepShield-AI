@@ -19,6 +19,7 @@ type Message = {
     tradeImpact: string;
     expectedSlippage: string;
     suggestedStrategy: string;
+    strategies?: Array<{ title: string; description: string; type: string }>;
     explainability: {
       riskReason: string;
       signals: string[];
@@ -67,7 +68,8 @@ export default function GuardianPage() {
               riskAssessment: data.confidence < 50 ? "High Risk" : data.confidence < 80 ? "Medium Risk" : "Low Risk",
               tradeImpact: "Varies",
               expectedSlippage: "Varies",
-              suggestedStrategy: data.recommendation || "Proceed with caution",
+              suggestedStrategy: "Dynamic Strategy",
+              strategies: data.strategies || [],
               explainability: {
                 riskReason: "AI Sentiment Analysis",
                 signals: ["On-chain activity", "DeepBook Liquidity"],
@@ -131,44 +133,25 @@ export default function GuardianPage() {
                     >
                       <h4 className="text-xs font-bold text-muted-foreground uppercase tracking-widest pl-1">Recommended Strategy</h4>
                       
-                      {/* Strategy Option 1 */}
-                      <Card className="bg-secondary/30 border-border hover:border-warning/50 transition-colors shadow-sm">
-                        <CardContent className="p-4 flex items-center gap-4">
-                          <div className="p-2 rounded bg-card border border-border">
-                            <AlertTriangle className="w-5 h-5 text-warning" />
-                          </div>
-                          <div>
-                            <h5 className="font-bold text-sm text-foreground">Wait 4 mins for liquidity</h5>
-                            <p className="text-xs text-muted-foreground mt-0.5">Predicted spread compression approaching.</p>
-                          </div>
-                        </CardContent>
-                      </Card>
-
-                      {/* Strategy Option 2 */}
-                      <Card className="bg-secondary/30 border-border hover:border-primary/50 transition-colors shadow-sm">
-                        <CardContent className="p-4 flex items-center gap-4">
-                          <div className="p-2 rounded bg-card border border-border">
-                            <Layers className="w-5 h-5 text-primary" />
-                          </div>
-                          <div>
-                            <h5 className="font-bold text-sm text-foreground">Split into 4 orders</h5>
-                            <p className="text-xs text-muted-foreground mt-0.5">2,500 SUI tranches to minimize slippage (Est. 0.04%).</p>
-                          </div>
-                        </CardContent>
-                      </Card>
-
-                      {/* Strategy Option 3 */}
-                      <Card className="bg-secondary/30 border-border hover:border-success/50 transition-colors shadow-sm">
-                        <CardContent className="p-4 flex items-center gap-4">
-                          <div className="p-2 rounded bg-card border border-border">
-                            <Shield className="w-5 h-5 text-[#7C3AED]" />
-                          </div>
-                          <div>
-                            <h5 className="font-bold text-sm text-foreground">Use Protected Execution</h5>
-                            <p className="text-xs text-muted-foreground mt-0.5">Route through DeepShield MEV blockers.</p>
-                          </div>
-                        </CardContent>
-                      </Card>
+                      {msg.analysis?.strategies?.map((strategy: any, sIdx: number) => {
+                        const Icon = strategy.type === 'warning' ? AlertTriangle : strategy.type === 'success' ? Shield : Layers;
+                        const colorClass = strategy.type === 'warning' ? 'text-warning' : strategy.type === 'success' ? 'text-[#7C3AED]' : 'text-primary';
+                        const borderClass = strategy.type === 'warning' ? 'hover:border-warning/50' : strategy.type === 'success' ? 'hover:border-[#7C3AED]/50' : 'hover:border-primary/50';
+                        
+                        return (
+                          <Card key={sIdx} className={`bg-secondary/30 border-border ${borderClass} transition-colors shadow-sm`}>
+                            <CardContent className="p-4 flex items-center gap-4">
+                              <div className="p-2 rounded bg-card border border-border">
+                                <Icon className={`w-5 h-5 ${colorClass}`} />
+                              </div>
+                              <div>
+                                <h5 className="font-bold text-sm text-foreground">{strategy.title}</h5>
+                                <p className="text-xs text-muted-foreground mt-0.5">{strategy.description}</p>
+                              </div>
+                            </CardContent>
+                          </Card>
+                        );
+                      })}
 
                       <div className="flex gap-3 pt-2">
                         <Button 
